@@ -17,6 +17,8 @@ class ScriptTagExtractor implements ExtractorInterface
     public function extract($text)
     {
         $doc = new DOMDocument();
+        libxml_use_internal_errors(true);
+
         $doc->loadHTML($text);
 
         $xpath = new DOMXPath($doc);
@@ -36,6 +38,8 @@ class ScriptTagExtractor implements ExtractorInterface
             }
             $result[] = $tag;
         }
+
+        libxml_clear_errors();
 
         return $result;
     }
