@@ -41,13 +41,14 @@ class ShowSourcesCommand extends Command
 
         $sourceFiles = $this->expandPaths(getcwd(), $source);
 
-        $output->writeln("Processing sources:\n". implode("\n", $sourceFiles));
+        $output->writeln("<info>Processing sources:</info>\n\t". implode("\n\t", $sourceFiles));
 
         $compiler = new ScriptTagCompiler(new ScriptTagExtractor());
         $files = $compiler->getCompileFileNames($sourceFiles, $webroot);
 
+        $output->writeln('');
         foreach ($files as $source => $sourceFiles) {
-            $output->writeln("Source {$source}:");
+            $output->writeln("<info>Source {$source}:</info>");
 
             foreach ($sourceFiles as $f) {
                 $output->writeln("\t{$f}");
