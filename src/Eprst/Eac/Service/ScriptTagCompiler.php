@@ -3,7 +3,6 @@
 namespace Eprst\Eac\Service;
 
 use Eprst\Eac\Service\Extractor\ExtractorInterface;
-use Symfony\Component\Finder\Finder;
 
 class ScriptTagCompiler
 {
@@ -32,8 +31,13 @@ class ScriptTagCompiler
 
             foreach ($tags as $t) {
                 $path = new Path($t->src);
-                $compileFiles[$file][] = $path->prepend($root);
+                $f = $path->prepend($root);
+                if (file_exists($f)) {
+                    $compileFiles[$file][] = $f;
+                }
             }
+
+            $compileFiles[$file] = array_unique($compileFiles[$file]);
         }
 
         return $compileFiles;
