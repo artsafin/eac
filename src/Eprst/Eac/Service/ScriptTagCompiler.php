@@ -4,7 +4,6 @@ namespace Eprst\Eac\Service;
 
 use Eprst\Eac\Service\Extractor\ExtractorInterface;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
 class ScriptTagCompiler
 {
@@ -18,13 +17,30 @@ class ScriptTagCompiler
         $this->extractor = $extractor;
     }
 
-    public function compile($glob)
+    public function getCompileFileNames($files, $root)
     {
-        /** @var SplFileInfo[] $files */
-        $files = Finder::create()->files()->name($glob)->depth(0)->in(getcwd());
+        $compileFiles = array();
 
         foreach ($files as $file) {
-            echo $file->getRealPath();
+
+            $compileFiles[$file] = array();
+
+            $text = file_get_contents($file);
+
+            /** @var ScriptTagDto[] $tags */
+            $tags = $this->extractor->extract($text);
+
+            foreach ($tags as $t) {
+                $path = new Path($t->src);
+                $compileFiles[$file][] = $path->prepend($root);
+            }
         }
+
+        return $compileFiles;
+    }
+
+    public function compile($glob, $relative, $compileDir)
+    {
+        $sources = $this->getCompileFileNames($glob, $relative);
     }
 } 
