@@ -4,7 +4,8 @@ namespace Eprst\Eac\Command;
 
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
 use Eprst\Eac\Service\Extractor\XPathTagExtractor;
-use Eprst\Eac\Service\ScriptTagResolver;
+use Eprst\Eac\Service\SgmlCommentChunk;
+use Eprst\Eac\Service\SgmlTagAssetResolver;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,8 +36,8 @@ class ShowSourcesCommand extends Command
 
         $output->writeln("<info>Processing sources:</info>\n\t". implode("\n\t", $sourceFiles));
 
-        $resolver = new ScriptTagResolver(new XPathTagExtractor('//script'));
-        $files = $resolver->resolveResources($sourceFiles, $webroot);
+        $resolver = new SgmlTagAssetResolver(new SgmlCommentChunk(), new XPathTagExtractor('//script'), 'src');
+        $files = $resolver->resolveAssets($sourceFiles, $webroot);
 
         $output->writeln('');
         foreach ($files as $source => $sourceFiles) {

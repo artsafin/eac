@@ -7,7 +7,7 @@ use DOMNode;
 use DOMNodeList;
 use DOMXPath;
 
-class XPathTagExtractor implements ExtractorInterface
+class XPathTagExtractor implements TagExtractorInterface
 {
     /**
      * @var string

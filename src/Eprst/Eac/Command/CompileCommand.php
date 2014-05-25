@@ -8,12 +8,13 @@ use Assetic\AssetManager;
 use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
 use Assetic\Filter\FilterCollection;
-use Assetic\Filter\Yui;
 use Assetic\FilterManager;
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
+use Eprst\Eac\Service\AssetCompiler;
 use Eprst\Eac\Service\Extractor\XPathTagExtractor;
 use Eprst\Eac\Service\Path;
-use Eprst\Eac\Service\ScriptTagResolver;
+use Eprst\Eac\Service\SgmlTagAssetResolver;
+use Eprst\Eac\Service\SgmlCommentChunk;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -85,52 +86,28 @@ class CompileCommand extends Command
         $output->writeln("<info>Compile directory:</info> ". $compileDir);
         $output->writeln("<info>Web root:</info> ". $webroot);
 
-        $resolver = new ScriptTagResolver(new XPathTagExtractor('//script'));
-        $resources = $resolver->resolveResources($sourceFiles, $webroot);
+        $chunkManager = new SgmlCommentChunk();
 
-        $fm = new FilterManager();
-        $fm->set('js_compressor',
-                 new FilterCollection(array(
-                                          new Yui\JsCompressorFilter($yuicPath, 'java')
-                                      )));
-        $fm->set('css_compressor',
-                 new FilterCollection(array(
-                                          new Yui\CssCompressorFilter($yuicPath, 'java')
-                                      )));
+        $resolver = new SgmlTagAssetResolver($chunkManager, new XPathTagExtractor('//script'), 'src');
+        $assetsData = $resolver->resolveAssets($sourceFiles, $webroot);
 
-        $am = new AssetManager();
+        $assetCompiler = new AssetCompiler($compileDir, $yuicPath, 'java');
 
-        $af = new AssetFactory($webroot);
-        $af->setAssetManager($am);
-        $af->setFilterManager($fm);
+        foreach ($assetsData as $sourceIdentifier => $assetFiles) {
 
-        $assetOptions = array(
-        );
+            $compileFile = $assetCompiler->compile($assetFiles, array('js_compressor'), 'js');
 
-        $sourceToAssetName = array();
-
-        $i = 0;
-        foreach ($resources as $sourceFile => $compileFiles) {
-            $assets = new AssetCollection();
-            foreach ($compileFiles as $f) {
-                $assets->add(new FileAsset($f));
+            if (file_exists($compileFile)) {
+                $output->writeln("Asset for <info>{$sourceIdentifier}</info>: <info>{$compileFile}</info>");
+            } else {
+                $output->writeln("Failed to write <info>{$compileFile}</info>");
             }
-            $assetName = sprintf('assets_%s', $i++);
-            $am->set($assetName, $assets);
 
-            $name = $af->generateAssetName(array("@{$assetName}"), array('js_compressor')) . ".js";
+            list($sourceFile, $chunkId) = explode('#', $sourceIdentifier);
 
-            $sourceToAssetName[$sourceFile] = $name;
+            $tag = $assetTag->generate($compileFile, $webroot, $prefix);
 
-            $output->writeln("Asset for <info>{$sourceFile}</info>: <info>{$name}</info>");
-
-            $asset = $af->createAsset(array("@{$assetName}"), array('js_compressor', 'css_compressor'), array(
-                'name' => $name,
-                'output' => '*'
-            ));
-
-            $w = new AssetWriter($compileDir);
-            $w->writeAsset($asset);
+            $chunkManager->replaceChunk(file_get_contents($sourceFile), $chunkId, $tag);
         }
     }
 }

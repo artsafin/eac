@@ -4,7 +4,7 @@
 namespace Eprst\Eac\Service\Extractor;
 
 
-interface ExtractorInterface
+interface TagExtractorInterface
 {
     /**
      * @param $text

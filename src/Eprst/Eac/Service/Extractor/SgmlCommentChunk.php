@@ -4,7 +4,9 @@
 namespace Eprst\Eac\Service;
 
 
-class SgmlCommentScope
+use Eprst\Eac\Service\Extractor\ChunkManagerInterface;
+
+class SgmlCommentChunk implements ChunkManagerInterface
 {
     private $commentIdentifier;
 
@@ -32,7 +34,7 @@ class SgmlCommentScope
         return $results;
     }
 
-    public function replaceChunk($text, $chunkReplacements)
+    public function replaceChunk($text, $chunkId, $replaceWithText)
     {
         $re = sprintf("/%s/", $this->buildRegexp());
 
@@ -40,15 +42,14 @@ class SgmlCommentScope
             return $text;
         }
 
-        foreach ($chunkReplacements as $chunkId => $replaceWithText) {
-            if (!isset($matches[$chunkId])) {
-                continue;
-            }
-            list($match, $offset) = $matches[$chunkId];
-            $len = mb_strlen($match);
-
-            $text = substr($text, 0, $offset) . $replaceWithText . substr($text, $offset + $len);
+        if (!isset($matches[$chunkId])) {
+            return $text;
         }
+
+        list($match, $offset) = $matches[$chunkId];
+        $len = mb_strlen($match);
+
+        $text = substr($text, 0, $offset) . $replaceWithText . substr($text, $offset + $len);
 
         return $text;
     }
