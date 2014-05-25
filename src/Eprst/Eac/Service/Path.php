@@ -13,7 +13,6 @@ class Path
     public function __construct($path)
     {
         $this->path = $path;
-        $this->url = parse_url($this->path);
     }
 
     public function setRoot($root)
@@ -21,10 +20,12 @@ class Path
         $this->root = $root;
     }
 
-    public function isRemote()
+    public static function isRemote($path)
     {
-        $isHostPresent = isset($this->url['host']);
-        $schemeIsFile = isset($this->url['scheme']) && $this->url['scheme'] == 'file';
+        $url = parse_url($path);
+
+        $isHostPresent = isset($url['host']);
+        $schemeIsFile = isset($url['scheme']) && $url['scheme'] == 'file';
 
         return $isHostPresent && !$schemeIsFile;
     }
@@ -53,33 +54,35 @@ class Path
         return $isPathStartsWithRoot;
     }
 
-    private function combinePathParts($path1, $path2)
+    private static function combinePathParts($path1, $path2)
     {
         return rtrim($path1, "\\/") . DIRECTORY_SEPARATOR . ltrim($path2, "\\/");
     }
 
-    private function combineMultiplePaths($paths, $isAppend = true)
+    private static function combineMultiplePaths($toPath, $paths, $append = true)
     {
-        if ($this->isRemote()) {
-            return $this->path;
+        if (self::isRemote($toPath)) {
+            return $toPath;
         }
 
-        $result = $this->path;
+        $result = $toPath;
+
+        $paths = $append ? $paths : array_reverse($paths);
 
         foreach ($paths as $part) {
-            $result = $isAppend ? $this->combinePathParts($result, $part) : $this->combinePathParts($part, $result);
+            $result = $append ? self::combinePathParts($result, $part) : self::combinePathParts($part, $result);
         }
 
         return $result;
     }
 
-    public function prepend($path1, $pathN = null)
+    public static function prepend($basePath, $path1, $pathN = null)
     {
-        return $this->combineMultiplePaths(array_reverse(func_get_args()), false);
+        return static::combineMultiplePaths($basePath, array_slice(func_get_args(), 1), false);
     }
 
-    public function append($path1, $pathN = null)
+    public static function append($basePath, $path1, $pathN = null)
     {
-        return $this->combineMultiplePaths(func_get_args());
+        return static::combineMultiplePaths($basePath, array_slice(func_get_args(), 1), true);
     }
 }

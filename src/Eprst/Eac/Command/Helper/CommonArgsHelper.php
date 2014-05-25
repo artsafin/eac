@@ -118,8 +118,7 @@ class CommonArgsHelper implements HelperInterface
                 if (Path::isAbsolute($item)) {
                     return $item;
                 } else {
-                    $path = new Path($item);
-                    return $path->prepend($relativePathRoot);
+                    return Path::prepend($item, $relativePathRoot);
                 }
             },
             $result);
@@ -147,6 +146,10 @@ class CommonArgsHelper implements HelperInterface
     public function getWebroot(InputInterface $input)
     {
         $webroot = $input->getArgument(self::ARG_WEBROOT);
+
+        if (!Path::isAbsolute($webroot)) {
+            $webroot = Path::prepend($webroot, getcwd());
+        }
 
         return $webroot;
     }

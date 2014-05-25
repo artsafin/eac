@@ -41,8 +41,7 @@ class ScriptTagResolver
                 if (empty($t['src'])) {
                     continue;
                 }
-                $path = new Path($t['src']);
-                $f = $path->prepend($root);
+                $f = Path::prepend($t['src'], $root);
                 if (file_exists($f)) {
                     $compileFiles[$file][] = $f;
                 }

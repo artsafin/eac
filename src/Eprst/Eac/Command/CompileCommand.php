@@ -12,6 +12,7 @@ use Assetic\Filter\Yui;
 use Assetic\FilterManager;
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
 use Eprst\Eac\Service\Extractor\XPathTagExtractor;
+use Eprst\Eac\Service\Path;
 use Eprst\Eac\Service\ScriptTagResolver;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -70,6 +71,9 @@ class CompileCommand extends Command
         if ($compileDir == self::OPTION_COMPILE_DIR_DEFAULT) {
             $compileDir = $webroot;
         }
+        if (!Path::isAbsolute($compileDir)) {
+            $compileDir = Path::prepend($compileDir, getcwd());
+        }
         $yuicPath    = $input->getOption(self::OPTION_YUIC);
 
         $prefix = $input->getOption(self::OPTION_PREFIX);
@@ -103,6 +107,8 @@ class CompileCommand extends Command
         $assetOptions = array(
         );
 
+        $sourceToAssetName = array();
+
         $i = 0;
         foreach ($resources as $sourceFile => $compileFiles) {
             $assets = new AssetCollection();
@@ -112,12 +118,19 @@ class CompileCommand extends Command
             $assetName = sprintf('assets_%s', $i++);
             $am->set($assetName, $assets);
 
-            $asset = $af->createAsset(array("@{$assetName}"), array('js_compressor', 'css_compressor'), $assetOptions);
+            $name = $af->generateAssetName(array("@{$assetName}"), array('js_compressor')) . ".js";
+
+            $sourceToAssetName[$sourceFile] = $name;
+
+            $output->writeln("Asset for <info>{$sourceFile}</info>: <info>{$name}</info>");
+
+            $asset = $af->createAsset(array("@{$assetName}"), array('js_compressor', 'css_compressor'), array(
+                'name' => $name,
+                'output' => '*'
+            ));
 
             $w = new AssetWriter($compileDir);
             $w->writeAsset($asset);
         }
-
-        var_dump($am->getNames());
     }
 }
