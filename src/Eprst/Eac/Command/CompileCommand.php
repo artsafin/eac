@@ -2,17 +2,11 @@
 
 namespace Eprst\Eac\Command;
 
-use Assetic\Asset\AssetCollection;
-use Assetic\Asset\FileAsset;
-use Assetic\AssetManager;
-use Assetic\AssetWriter;
-use Assetic\Factory\AssetFactory;
-use Assetic\Filter\FilterCollection;
-use Assetic\FilterManager;
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
 use Eprst\Eac\Service\AssetCompiler;
 use Eprst\Eac\Service\Extractor\XPathTagExtractor;
 use Eprst\Eac\Service\Path;
+use Eprst\Eac\Service\ScriptTagGenerator;
 use Eprst\Eac\Service\SgmlTagAssetResolver;
 use Eprst\Eac\Service\SgmlCommentChunk;
 use Symfony\Component\Console\Command\Command;
@@ -92,6 +86,8 @@ class CompileCommand extends Command
         $assetsData = $resolver->resolveAssets($sourceFiles, $webroot);
 
         $assetCompiler = new AssetCompiler($compileDir, $yuicPath, 'java');
+
+        $assetTag = new ScriptTagGenerator();
 
         foreach ($assetsData as $sourceIdentifier => $assetFiles) {
 
