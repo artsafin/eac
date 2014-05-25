@@ -58,7 +58,7 @@ class Path
         return rtrim($path1, "\\/") . DIRECTORY_SEPARATOR . ltrim($path2, "\\/");
     }
 
-    private function combineMultiplePaths($paths)
+    private function combineMultiplePaths($paths, $isAppend = true)
     {
         if ($this->isRemote()) {
             return $this->path;
@@ -67,7 +67,7 @@ class Path
         $result = $this->path;
 
         foreach ($paths as $part) {
-            $result = $this->combinePathParts($part, $result);
+            $result = $isAppend ? $this->combinePathParts($result, $part) : $this->combinePathParts($part, $result);
         }
 
         return $result;
@@ -75,6 +75,11 @@ class Path
 
     public function prepend($path1, $pathN = null)
     {
-        return $this->combineMultiplePaths(array_reverse(func_get_args()));
+        return $this->combineMultiplePaths(array_reverse(func_get_args()), false);
+    }
+
+    public function append($path1, $pathN = null)
+    {
+        return $this->combineMultiplePaths(func_get_args());
     }
 }

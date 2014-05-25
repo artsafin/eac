@@ -10,12 +10,15 @@ use Symfony\Component\Console\Helper\HelperInterface;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
-class CommonInputDefinitionHelper implements HelperInterface
+class CommonArgsHelper implements HelperInterface
 {
     const ARG_SOURCE = 'source';
 
     const ARG_WEBROOT = 'webroot';
+
+    const OPTION_DEPTH = 'depth';
 
     /**
      * @var HelperSet
@@ -70,7 +73,12 @@ class CommonInputDefinitionHelper implements HelperInterface
                 self::ARG_SOURCE,
                 InputArgument::REQUIRED | InputArgument::IS_ARRAY,
                 'HTML file pattern to search sources in'
-            );
+            )
+            ->addOption(self::OPTION_DEPTH,
+                        strtolower(substr(self::OPTION_DEPTH, 0, 1)),
+                        InputOption::VALUE_REQUIRED,
+                        'Recurse through directories specified in ' . self::ARG_SOURCE,
+                        1);
     }
 
     /**
@@ -81,19 +89,23 @@ class CommonInputDefinitionHelper implements HelperInterface
     public function getSources(InputInterface $input)
     {
         $source  = $input->getArgument(self::ARG_SOURCE);
+        $depth = max($input->getOption(self::OPTION_DEPTH), 0);
 
-        $sourceFiles = $this->expandPaths(getcwd(), $source);
+        $sourceFiles = $this->expandPaths($source, getcwd(), $depth);
 
         return $sourceFiles;
     }
 
-    private function expandPaths($sourceFilesRoot, $paths)
+    private function expandPaths($paths, $relativePathRoot = null, $depth = 0)
     {
         // Not all shells expand path wildcards
         $result = array_reduce($paths,
         function (&$acc, $item) {
             if (strpos($item, '*') !== false || strpos($item, '?') !== false) {
-                $acc = array_merge($acc, glob($item, GLOB_BRACE | GLOB_NOCHECK));
+                $glob = glob($item, GLOB_BRACE);
+                if ($glob !== false) {
+                    $acc = array_merge($acc, $glob);
+                }
             } else {
                 $acc[] = $item;
             }
@@ -101,11 +113,28 @@ class CommonInputDefinitionHelper implements HelperInterface
             return $acc;
         }, array());
 
-        $result = array_map(function ($item) use ($sourceFilesRoot) {
-            $path = new Path($item);
+        if ($relativePathRoot) {
+            $result = array_map(function ($item) use ($relativePathRoot) {
+                if (Path::isAbsolute($item)) {
+                    return $item;
+                } else {
+                    $path = new Path($item);
+                    return $path->prepend($relativePathRoot);
+                }
+            },
+            $result);
+        }
 
-            return $path->prepend($sourceFilesRoot);
-        }, $result);
+        if ($depth > 0) {
+            $dirEntries = array_filter($result, 'is_dir');
+            $globDirEntries = array_map(function ($item) {
+                return $item . DIRECTORY_SEPARATOR . "*";
+            }, $dirEntries);
+
+            $recurseResult = $this->expandPaths($globDirEntries, null, $depth - 1);
+            $result = array_diff($result, $dirEntries);
+            $result = array_merge($result, $recurseResult);
+        }
 
         return $result;
     }

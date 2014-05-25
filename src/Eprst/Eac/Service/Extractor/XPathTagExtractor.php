@@ -6,14 +6,22 @@ use DOMDocument;
 use DOMNode;
 use DOMNodeList;
 use DOMXPath;
-use Eprst\Eac\Service\ScriptTagDto;
 
-class ScriptTagExtractor implements ExtractorInterface
+class XPathTagExtractor implements ExtractorInterface
 {
-    public function __construct()
+    /**
+     * @var string
+     */
+    private $xpath;
+
+    public function __construct($xpath)
     {
+        $this->xpath = $xpath;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function extract($text)
     {
         $doc = new DOMDocument();
@@ -23,7 +31,7 @@ class ScriptTagExtractor implements ExtractorInterface
 
         $xpath = new DOMXPath($doc);
         /** @var DOMNodeList|DomNode[] $nodes */
-        $nodes = $xpath->query('//script');
+        $nodes = $xpath->query($this->xpath);
 
         if (!$nodes->length) {
             return array();
@@ -32,9 +40,9 @@ class ScriptTagExtractor implements ExtractorInterface
         $result = array();
 
         foreach ($nodes as $node) {
-            $tag = new ScriptTagDto();
+            $tag = array();
             foreach ($node->attributes as $attr) {
-                $tag->{$attr->name} = (string) $attr->value;
+                $tag[$attr->name] = (string) $attr->value;
             }
             $result[] = $tag;
         }

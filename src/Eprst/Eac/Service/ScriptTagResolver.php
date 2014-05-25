@@ -4,7 +4,7 @@ namespace Eprst\Eac\Service;
 
 use Eprst\Eac\Service\Extractor\ExtractorInterface;
 
-class ScriptTagCompiler
+class ScriptTagResolver
 {
     /**
      * @var ExtractorInterface
@@ -16,7 +16,15 @@ class ScriptTagCompiler
         $this->extractor = $extractor;
     }
 
-    public function getCompileFileNames($files, $root)
+    /**
+     * Return a list of absolute paths to script files
+     *
+     * @param array $files
+     * @param string $root
+     *
+     * @return array
+     */
+    public function resolveResources($files, $root)
     {
         $compileFiles = array();
 
@@ -30,7 +38,10 @@ class ScriptTagCompiler
             $tags = $this->extractor->extract($text);
 
             foreach ($tags as $t) {
-                $path = new Path($t->src);
+                if (empty($t['src'])) {
+                    continue;
+                }
+                $path = new Path($t['src']);
                 $f = $path->prepend($root);
                 if (file_exists($f)) {
                     $compileFiles[$file][] = $f;
@@ -41,10 +52,5 @@ class ScriptTagCompiler
         }
 
         return $compileFiles;
-    }
-
-    public function compile($glob, $relative, $compileDir)
-    {
-        $sources = $this->getCompileFileNames($glob, $relative);
     }
 } 

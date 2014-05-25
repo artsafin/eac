@@ -2,7 +2,7 @@
 
 namespace Eprst\Eac\Console;
 
-use Eprst\Eac\Command\Helper\CommonInputDefinitionHelper;
+use Eprst\Eac\Command\CompileCommand;
 use Eprst\Eac\Command\ShowSourcesCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
@@ -13,14 +13,13 @@ class Application extends BaseApplication
     public function __construct()
     {
         parent::__construct('EAC', self::VERSION);
-
-        $this->getHelperSet()->set(new CommonInputDefinitionHelper(), 'cmd_args');
     }
 
     protected function getDefaultCommands()
     {
         return array_merge(parent::getDefaultCommands(), array(
-            new ShowSourcesCommand()
+            new ShowSourcesCommand(),
+            new CompileCommand(),
         ));
     }
 }

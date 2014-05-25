@@ -2,37 +2,41 @@
 
 namespace Eprst\Eac\Command;
 
-use Eprst\Eac\Command\Helper\CommonInputDefinitionHelper;
-use Eprst\Eac\Service\Extractor\ScriptTagExtractor;
-use Eprst\Eac\Service\ScriptTagCompiler;
+use Eprst\Eac\Command\Helper\CommonArgsHelper;
+use Eprst\Eac\Service\Extractor\XPathTagExtractor;
+use Eprst\Eac\Service\ScriptTagResolver;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ShowSourcesCommand extends Command
 {
+    /**
+     * @var CommonArgsHelper
+     */
+    private $argsHelper;
+
     protected function configure()
     {
+        $this->argsHelper = new CommonArgsHelper();
+
         $this
             ->setName('sources')
             ->setDescription('Show sources that will be covered by compiler')
            ;
 
-        $this->getHelper('cmd_args')->addArguments($this);
+        $this->argsHelper->addArguments($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var CommonInputDefinitionHelper $eacArgs */
-        $eacArgs = $this->getHelper('cmd_args');
-
-        $sourceFiles = $eacArgs->getSources($input);
-        $webroot = $eacArgs->getWebroot($input);
+        $sourceFiles = $this->argsHelper->getSources($input);
+        $webroot = $this->argsHelper->getWebroot($input);
 
         $output->writeln("<info>Processing sources:</info>\n\t". implode("\n\t", $sourceFiles));
 
-        $compiler = new ScriptTagCompiler(new ScriptTagExtractor());
-        $files = $compiler->getCompileFileNames($sourceFiles, $webroot);
+        $resolver = new ScriptTagResolver(new XPathTagExtractor('//script'));
+        $files = $resolver->resolveResources($sourceFiles, $webroot);
 
         $output->writeln('');
         foreach ($files as $source => $sourceFiles) {
