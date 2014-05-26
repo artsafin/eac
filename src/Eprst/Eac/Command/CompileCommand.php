@@ -4,11 +4,11 @@ namespace Eprst\Eac\Command;
 
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
 use Eprst\Eac\Service\AssetCompiler;
+use Eprst\Eac\Service\Extractor\SgmlCommentChunk;
 use Eprst\Eac\Service\Extractor\XPathTagExtractor;
 use Eprst\Eac\Service\Path;
 use Eprst\Eac\Service\ScriptTagGenerator;
 use Eprst\Eac\Service\SgmlTagAssetResolver;
-use Eprst\Eac\Service\SgmlCommentChunk;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -90,6 +90,10 @@ class CompileCommand extends Command
         $assetTag = new ScriptTagGenerator();
 
         foreach ($assetsData as $sourceIdentifier => $assetFiles) {
+
+            if (empty($assetFiles)) {
+                continue;
+            }
 
             $compileFile = $assetCompiler->compile($assetFiles, array('js_compressor'), 'js');
 

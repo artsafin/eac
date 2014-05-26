@@ -52,19 +52,25 @@ class SgmlTagAssetResolver
 
             $text = file_get_contents($file);
 
-            $tags = $this->extractor->extract($text);
+            $chunks = $this->chunkManager->extractChunks($text);
 
-            foreach ($tags as $t) {
-                if (empty($t[$this->tagAttribute])) {
-                    continue;
+            foreach ($chunks as $chunkId => $chunkText) {
+
+                $sourceId = sprintf("%s#%s", $file, $chunkId);
+
+                $tags = $this->extractor->extract($chunkText);
+
+                foreach ($tags as $t) {
+                    if (empty($t[$this->tagAttribute])) {
+                        continue;
+                    }
+                    $f = Path::prepend($t[$this->tagAttribute], $root);
+                    if (file_exists($f)) {
+                        $compileFiles[$sourceId][] = $f;
+                    }
                 }
-                $f = Path::prepend($t[$this->tagAttribute], $root);
-                if (file_exists($f)) {
-                    $compileFiles[$file][] = $f;
-                }
+                $compileFiles[$sourceId] = array_unique($compileFiles[$sourceId]);
             }
-
-            $compileFiles[$file] = array_unique($compileFiles[$file]);
         }
 
         return $compileFiles;

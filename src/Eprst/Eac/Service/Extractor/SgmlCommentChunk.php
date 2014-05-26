@@ -1,10 +1,7 @@
 <?php
 
 
-namespace Eprst\Eac\Service;
-
-
-use Eprst\Eac\Service\Extractor\ChunkManagerInterface;
+namespace Eprst\Eac\Service\Extractor;
 
 class SgmlCommentChunk implements ChunkManagerInterface
 {
@@ -22,7 +19,7 @@ class SgmlCommentChunk implements ChunkManagerInterface
 
     public function extractChunks($fromText)
     {
-        $re = sprintf("/%s/", $this->buildRegexp());
+        $re = sprintf("/%s/ms", $this->buildRegexp());
 
         $results = array();
 
