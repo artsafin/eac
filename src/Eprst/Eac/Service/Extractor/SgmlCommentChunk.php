@@ -14,12 +14,12 @@ class SgmlCommentChunk implements ChunkManagerInterface
 
     private function buildRegexp()
     {
-        return sprintf('<!--\s*?%s(.*?(?=-->))-->(.*?)<!--\s*?\/%s\s*?-->', $this->commentIdentifier, $this->commentIdentifier);
+        return sprintf('/<!--\s*?%s(.*?(?=-->))-->(.*?)<!--\s*?\/%s\s*?-->/ms', $this->commentIdentifier, $this->commentIdentifier);
     }
 
     public function extractChunks($fromText)
     {
-        $re = sprintf("/%s/ms", $this->buildRegexp());
+        $re = $this->buildRegexp();
 
         $results = array();
 
@@ -48,17 +48,20 @@ class SgmlCommentChunk implements ChunkManagerInterface
 
     public function replaceChunk($text, $chunkId, $replaceWithText)
     {
-        $re = sprintf("/%s/", $this->buildRegexp());
+        $chunkId = (int) $chunkId;
+        $re = $this->buildRegexp();
 
         if (!preg_match_all($re, $text, $matches, PREG_OFFSET_CAPTURE)) {
             return $text;
         }
 
-        if (!isset($matches[$chunkId])) {
+        if (!isset($matches[2])) {
             return $text;
         }
 
-        list($match, $offset) = $matches[$chunkId];
+        $chunkBodyMatches = $matches[2];
+
+        list($match, $offset) = $chunkBodyMatches[$chunkId];
         $len = mb_strlen($match);
 
         $text = substr($text, 0, $offset) . $replaceWithText . substr($text, $offset + $len);

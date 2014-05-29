@@ -92,6 +92,8 @@ class CompileCommand extends Command
 
         $assetTag = new ScriptTagGenerator();
 
+        $tempFileMap = array();
+
         foreach ($assetsData as $sourceIdentifier => $assetFiles) {
 
             if (empty($assetFiles)) {
@@ -101,10 +103,9 @@ class CompileCommand extends Command
             $compileFile = $assetCompiler->compile($assetFiles, array('js_compressor'), 'js');
 
             if (file_exists($compileFile)) {
-                $output->writeln("Asset for <info>{$sourceIdentifier}</info>: <info>{$compileFile}</info>");
+                $output->write("Chunk <info>{$sourceIdentifier}</info>: <info>{$compileFile}</info>");
             } else {
-                $output->writeln("Failed to write <info>{$compileFile}</info>. Skipping to the next.");
-                continue;
+                throw new \RuntimeException("Failed to write <info>{$compileFile}</info>.");
             }
 
             list($sourceFile, $chunkId) = explode('#', $sourceIdentifier);
@@ -112,18 +113,32 @@ class CompileCommand extends Command
             $resourcePrefix = $this->getResourcePrefix($prefix, $compileDir, $webroot);
 
             if ($resourcePrefix === false) {
-                $output->writeln("Compile dir is not under web root, though you must specify --prefix option.");
+                throw new \RuntimeException("Compile dir is not under web root, though you must specify --prefix option.");
             }
 
             $compiledSrc = Path::prepend(basename($compileFile), $resourcePrefix);
             $compiledSrc = str_replace(DIRECTORY_SEPARATOR, '/', $compiledSrc);
 
-            $output->writeln("Compiled src <info>{$sourceIdentifier}</info>: <info>{$compiledSrc}</info>");
+            $output->writeln(" -> <info>{$compiledSrc}</info>");
 
             $tag = $assetTag->generate($compiledSrc);
 
-            $source = $chunkManager->replaceChunk(file_get_contents($sourceFile), $chunkId, $tag);
-            file_put_contents($sourceFile.'.eac', $source);
+            if (!isset($tempFileMap[$sourceFile])) {
+                $tempFileMap[$sourceFile] = Path::append(sys_get_temp_dir(), 'EAC' . sha1($sourceFile));
+                copy($sourceFile, $tempFileMap[$sourceFile]);
+            }
+
+            $source = $chunkManager->replaceChunk(file_get_contents($tempFileMap[$sourceFile]), $chunkId, $tag);
+            file_put_contents($tempFileMap[$sourceFile], $source);
+        }
+
+        $output->writeln('');
+        $output->writeln('Writing ' . count($tempFileMap) . ' files');
+        foreach ($tempFileMap as $target => $source) {
+            if (!copy($source, $target)) {
+                throw new \RuntimeException("Copy failed {$source} -> {$target}");
+            }
+            unlink($source);
         }
     }
 

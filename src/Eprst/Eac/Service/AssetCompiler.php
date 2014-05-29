@@ -41,9 +41,9 @@ class AssetCompiler
         $this->compileDir = $compileDir;
     }
 
-    public function compile($assetFiles, $compressors, $extension)
+    public function compile($assetFiles, $compressors)
     {
-        $compileFile = sprintf('%s.%s', $this->af->generateAssetName($assetFiles, $compressors), $extension);
+        $compileFile = $this->af->generateAssetName($assetFiles, $compressors);
 
         $asset = $this->af->createAsset($assetFiles,
                                         $compressors,
