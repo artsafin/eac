@@ -124,14 +124,15 @@ class CommonArgsHelper implements HelperInterface
             $result);
         }
 
+        $dirEntries = array_filter($result, 'is_dir');
+        $result = array_diff($result, $dirEntries);
+
         if ($depth > 0) {
-            $dirEntries = array_filter($result, 'is_dir');
             $globDirEntries = array_map(function ($item) {
                 return $item . DIRECTORY_SEPARATOR . "*";
             }, $dirEntries);
 
             $recurseResult = $this->expandPaths($globDirEntries, null, $depth - 1);
-            $result = array_diff($result, $dirEntries);
             $result = array_merge($result, $recurseResult);
         }
 

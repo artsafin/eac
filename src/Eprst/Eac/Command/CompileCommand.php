@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CompileCommand extends Command
 {
     const OPTION_COMPILE_DIR = 'out';
-    const OPTION_COMPILE_DIR_DEFAULT = 'web root';
+    const OPTION_COMPILE_DIR_DEFAULT = '<webroot>/assets-min';
 
     const OPTION_PREFIX = 'prefix';
     const OPTION_PREFIX_DEFAULT = 'smart choice';
@@ -64,7 +64,10 @@ class CompileCommand extends Command
 
         $compileDir  = $input->getOption(self::OPTION_COMPILE_DIR);
         if ($compileDir == self::OPTION_COMPILE_DIR_DEFAULT) {
-            $compileDir = $webroot;
+            $compileDir = str_replace('<webroot>', $webroot, $compileDir);
+            if (!is_dir($compileDir)) {
+                mkdir($compileDir, 0750, true);
+            }
         }
         if (!Path::isAbsolute($compileDir)) {
             $compileDir = Path::prepend($compileDir, getcwd());
@@ -76,9 +79,9 @@ class CompileCommand extends Command
             $prefix = true;
         }
 
-        $output->writeln("<info>Processing sources:</info>\n\t". implode("\n\t", $sourceFiles));
-        $output->writeln("<info>Compile directory:</info> ". $compileDir);
-        $output->writeln("<info>Web root:</info> ". $webroot);
+        $output->writeln("Processing sources:\n\t<info>". implode("</info>\n\t<info>", $sourceFiles) . "</info>");
+        $output->writeln("Compile directory: <info>{$compileDir}</info>");
+        $output->writeln("Web root: <info>{$webroot}</info>");
 
         $chunkManager = new SgmlCommentChunk();
 
@@ -100,14 +103,43 @@ class CompileCommand extends Command
             if (file_exists($compileFile)) {
                 $output->writeln("Asset for <info>{$sourceIdentifier}</info>: <info>{$compileFile}</info>");
             } else {
-                $output->writeln("Failed to write <info>{$compileFile}</info>");
+                $output->writeln("Failed to write <info>{$compileFile}</info>. Skipping to the next.");
+                continue;
             }
 
             list($sourceFile, $chunkId) = explode('#', $sourceIdentifier);
 
-            $tag = $assetTag->generate($compileFile, $webroot, $prefix);
+            $resourcePrefix = $this->getResourcePrefix($prefix, $compileDir, $webroot);
 
-            $chunkManager->replaceChunk(file_get_contents($sourceFile), $chunkId, $tag);
+            if ($resourcePrefix === false) {
+                $output->writeln("Compile dir is not under web root, though you must specify --prefix option.");
+            }
+
+            $compiledSrc = Path::prepend(basename($compileFile), $resourcePrefix);
+            $compiledSrc = str_replace(DIRECTORY_SEPARATOR, '/', $compiledSrc);
+
+            $output->writeln("Compiled src <info>{$sourceIdentifier}</info>: <info>{$compiledSrc}</info>");
+
+            $tag = $assetTag->generate($compiledSrc);
+
+            $source = $chunkManager->replaceChunk(file_get_contents($sourceFile), $chunkId, $tag);
+            file_put_contents($sourceFile.'.eac', $source);
         }
+    }
+
+    private function getResourcePrefix($desiredPrefix, $compileDir, $webroot)
+    {
+        if ($desiredPrefix === true) {
+            $compileDir = realpath($compileDir);
+            $webroot = realpath($webroot);
+
+            if (strpos($webroot, $compileDir) === 0) {
+                $desiredPrefix = str_replace($webroot, '', $compileDir);
+            } else {
+                return false;
+            }
+        }
+
+        return $desiredPrefix;
     }
 }

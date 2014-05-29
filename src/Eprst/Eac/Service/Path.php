@@ -22,6 +22,10 @@ class Path
 
     public static function isRemote($path)
     {
+        if (mb_substr($path, 0, 2) == '//') {
+            return true;
+        }
+
         $url = parse_url($path);
 
         $isHostPresent = isset($url['host']);
@@ -32,6 +36,10 @@ class Path
 
     public static function isAbsolute($path, $root = null)
     {
+        if (self::isRemote($path)) {
+            return true;
+        }
+
         $isWin = defined('PHP_WINDOWS_VERSION_BUILD');
         if ($isWin) {
             if ($root === null) {
