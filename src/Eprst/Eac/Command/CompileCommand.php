@@ -63,7 +63,7 @@ class CompileCommand extends Command
              ->addOption(self::OPTION_MODES,
                          substr(self::OPTION_MODES, 0, 1),
                          InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                         '');
+                         'Possible values: js, css');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

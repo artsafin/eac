@@ -1,6 +1,6 @@
 <?php
 
-namespace Eprst\Eac\Service\TagWriter;
+namespace Eprst\Eac\Service\TagGenerator;
 
 class ScriptTagGenerator implements TagGeneratorInterface
 {

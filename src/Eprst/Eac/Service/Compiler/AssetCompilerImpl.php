@@ -7,6 +7,7 @@ use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
 use Assetic\Filter\FilterCollection;
 use Assetic\FilterManager;
+use Eprst\Eac\Service\Path;
 
 class AssetCompilerImpl implements AssetCompiler
 {
@@ -15,22 +16,24 @@ class AssetCompilerImpl implements AssetCompiler
      */
     private $af;
     private $compileDir;
-    private $filters;
 
-    public function __construct($filters, $compileDir, $webroot)
+    public function __construct($filterObjs, $compileDir, $webroot)
     {
+        $fm = new FilterManager();
+        $fm->set('filters', new FilterCollection($filterObjs));
+
         $this->af = new AssetFactory($webroot);
+        $this->af->setFilterManager($fm);
 
         $this->compileDir = $compileDir;
-        $this->filters = $filters;
     }
 
     public function compile($assetFiles)
     {
-        $compileFile = $this->af->generateAssetName($assetFiles, $this->filters);
+        $compileFile = $this->af->generateAssetName($assetFiles, 'filters');
 
         $asset = $this->af->createAsset($assetFiles,
-                                        $this->filters,
+                                        'filters',
                                         array(
                                             'name'   => $compileFile,
                                             'output' => '*'

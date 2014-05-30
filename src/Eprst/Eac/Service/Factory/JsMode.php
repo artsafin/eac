@@ -8,10 +8,10 @@ use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Chunk\SgmlCommentChunk;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
 use Eprst\Eac\Service\Compiler\AssetCompilerImpl;
+use Eprst\Eac\Service\TagGenerator\ScriptTagGenerator;
+use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
 use Eprst\Eac\Service\TagReader\XPathTagReader;
-use Eprst\Eac\Service\TagWriter\ScriptTagGenerator;
-use Eprst\Eac\Service\TagWriter\TagGeneratorInterface;
 use Assetic\Filter\Yui;
 
 class JsMode implements ModeFactoryInterface
