@@ -24,8 +24,6 @@ class CompileCommand extends Command
 
     const OPTION_WRITE_REPLACE = 'replace';
 
-    const OPTION_MODES = 'mode';
-
     /**
      * @var CommonArgsHelper
      */
@@ -59,17 +57,14 @@ class CompileCommand extends Command
              ->addOption(self::OPTION_WRITE_REPLACE,
                          null,
                          InputOption::VALUE_NONE,
-                         'Put modified content to source file instead of .eac file')
-             ->addOption(self::OPTION_MODES,
-                         substr(self::OPTION_MODES, 0, 1),
-                         InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                         'Possible values: js, css');
+                         'Put modified content to source file instead of .eac file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $sourceFiles = $this->argsHelper->getSources($input);
         $webroot     = $this->argsHelper->getWebroot($input);
+        $modeAliases = $this->argsHelper->getModes($input);
 
         $compileDir  = $input->getOption(self::OPTION_COMPILE_DIR);
         if ($compileDir == self::OPTION_COMPILE_DIR_DEFAULT) {
@@ -97,7 +92,7 @@ class CompileCommand extends Command
 
         /** @var ModeFactoryInterface[] $modes */
         $modes = array();
-        foreach ($input->getOption(self::OPTION_MODES) as $mode) {
+        foreach ($modeAliases as $mode) {
             switch ($mode) {
                 case 'js':
                     $modes[] = new JsMode($yuicPath, $javaPath, $compileDir, $webroot);

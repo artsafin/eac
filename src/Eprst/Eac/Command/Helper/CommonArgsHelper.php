@@ -20,6 +20,8 @@ class CommonArgsHelper implements HelperInterface
 
     const OPTION_DEPTH = 'depth';
 
+    const OPTION_MODES = 'mode';
+
     /**
      * @var HelperSet
      */
@@ -78,7 +80,11 @@ class CommonArgsHelper implements HelperInterface
                         strtolower(substr(self::OPTION_DEPTH, 0, 1)),
                         InputOption::VALUE_REQUIRED,
                         'Recurse through directories specified in ' . self::ARG_SOURCE,
-                        1);
+                        1)
+            ->addOption(self::OPTION_MODES,
+                        substr(self::OPTION_MODES, 0, 1),
+                        InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+                        'Possible values: js, css');
     }
 
     /**
@@ -153,5 +159,10 @@ class CommonArgsHelper implements HelperInterface
         }
 
         return $webroot;
+    }
+
+    public function getModes(InputInterface $input)
+    {
+        return $input->getOption(self::OPTION_MODES);
     }
 }
