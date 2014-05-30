@@ -8,7 +8,7 @@ use Eprst\Eac\Service\Compiler\AssetCompiler;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
 use Eprst\Eac\Service\TagWriter\TagGeneratorInterface;
 
-interface ServiceFactoryInterface
+interface ModeFactoryInterface
 {
     /**
      * @return ChunkManagerInterface

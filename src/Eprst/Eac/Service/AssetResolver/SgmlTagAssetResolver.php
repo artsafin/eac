@@ -3,15 +3,15 @@
 namespace Eprst\Eac\Service\AssetResolver;
 
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
-use Eprst\Eac\Service\Extractor\TagExtractorInterface;
 use Eprst\Eac\Service\Path;
+use Eprst\Eac\Service\TagReader\TagReaderInterface;
 
 class SgmlTagAssetResolver implements AssetResolverInterface
 {
     /**
-     * @var TagExtractorInterface
+     * @var TagReaderInterface
      */
-    private $extractor;
+    private $reader;
 
     /**
      * @var ChunkManagerInterface
@@ -25,12 +25,12 @@ class SgmlTagAssetResolver implements AssetResolverInterface
 
     /**
      * @param ChunkManagerInterface $chunkManager
-     * @param TagExtractorInterface $extractor
+     * @param TagReaderInterface $reader
      * @param string                $tagAttribute Tag attribute which contains asset URI
      */
-    public function __construct(ChunkManagerInterface $chunkManager, TagExtractorInterface $extractor, $tagAttribute)
+    public function __construct(ChunkManagerInterface $chunkManager, TagReaderInterface $reader, $tagAttribute)
     {
-        $this->extractor    = $extractor;
+        $this->reader    = $reader;
         $this->chunkManager = $chunkManager;
         $this->tagAttribute = $tagAttribute;
     }
@@ -61,7 +61,7 @@ class SgmlTagAssetResolver implements AssetResolverInterface
 
                 $compileFiles[$sourceId] = array();
 
-                $tags = $this->extractor->extract($chunkText);
+                $tags = $this->reader->read($chunkText);
 
                 foreach ($tags as $t) {
                     if (empty($t[$this->tagAttribute])) {

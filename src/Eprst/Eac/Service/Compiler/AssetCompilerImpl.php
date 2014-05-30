@@ -5,7 +5,6 @@ namespace Eprst\Eac\Service\Compiler;
 
 use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
-use Assetic\Filter\Yui;
 use Assetic\Filter\FilterCollection;
 use Assetic\FilterManager;
 
@@ -18,18 +17,8 @@ class AssetCompilerImpl implements AssetCompiler
     private $compileDir;
     private $filters;
 
-    public function __construct($filters, $compileDir, $webroot, $yuicPath, $javaPath)
+    public function __construct($filters, $compileDir, $webroot)
     {
-        $fm = new FilterManager();
-        $fm->set('js_compressor',
-                 new FilterCollection(array(
-                                          new Yui\JsCompressorFilter($yuicPath, $javaPath)
-                                      )));
-        $fm->set('css_compressor',
-                 new FilterCollection(array(
-                                          new Yui\CssCompressorFilter($yuicPath, $javaPath)
-                                      )));
-
         $this->af = new AssetFactory($webroot);
 
         $this->compileDir = $compileDir;
