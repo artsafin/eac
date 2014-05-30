@@ -37,7 +37,7 @@ class CompileCommand extends Command
         $this->argsHelper = new CommonArgsHelper();
 
         $this
-            ->setName('compile')
+            ->setName('eac:compile')
             ->setDescription('Compile assets of specified source files');
 
         $this->argsHelper->addArguments($this);
@@ -94,7 +94,7 @@ class CompileCommand extends Command
         $resolver = new SgmlTagAssetResolver($chunkManager, new XPathTagExtractor('//script'), 'src');
         $assetsData = $resolver->resolveAssets($sourceFiles, $webroot);
 
-        $assetCompiler = new AssetCompiler($compileDir, $yuicPath, 'java');
+        $assetCompiler = new AssetCompiler($compileDir, $webroot, $yuicPath, 'java');
 
         $assetTag = new ScriptTagGenerator();
 
@@ -104,7 +104,7 @@ class CompileCommand extends Command
             $output->write("Chunk <info>{$sourceIdentifier}</info>:");
 
             if (empty($assetFiles)) {
-                $output->writeln(" contains no files.");
+                $output->writeln(" contains no assets.");
                 continue;
             }
 

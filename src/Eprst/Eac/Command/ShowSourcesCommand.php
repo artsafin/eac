@@ -22,7 +22,7 @@ class ShowSourcesCommand extends Command
         $this->argsHelper = new CommonArgsHelper();
 
         $this
-            ->setName('sources')
+            ->setName('eac:sources')
             ->setDescription('Show sources that will be covered by compiler')
            ;
 
