@@ -3,9 +3,8 @@
 namespace Eprst\Eac\Command;
 
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
-use Eprst\Eac\Service\Extractor\SgmlCommentChunk;
-use Eprst\Eac\Service\Extractor\XPathTagExtractor;
-use Eprst\Eac\Service\SgmlTagAssetResolver;
+use Eprst\Eac\Factory\JsMode;
+use Eprst\Eac\Factory\ModeFactoryInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -33,18 +32,38 @@ class ShowSourcesCommand extends Command
     {
         $sourceFiles = $this->argsHelper->getSources($input);
         $webroot = $this->argsHelper->getWebroot($input);
+        $modeAliases = $this->argsHelper->getModes($input);
 
         $output->writeln("Processing sources:\n\t<info>". implode("</info>\n\t<info>", $sourceFiles) . "</info>");
 
-        $resolver = new SgmlTagAssetResolver(new SgmlCommentChunk(), new XPathTagExtractor('//script'), 'src');
-        $files = $resolver->resolveAssets($sourceFiles, $webroot);
+        /** @var ModeFactoryInterface[] $modes */
+        $modes = array();
+        foreach ($modeAliases as $mode) {
+            switch ($mode) {
+                case 'js':
+                    $modes[] = new JsMode('', '', '', $webroot);
+                    break;
+                default:
+                    throw new \RuntimeException("Unsupported mode {$mode}");
+            }
+        }
+
+        if (empty($modes)) {
+            throw new \RuntimeException("You must specify at least one mode.");
+        }
 
         $output->writeln('');
-        foreach ($files as $source => $sourceFiles) {
-            $output->writeln("Chunk {$source}:");
 
-            foreach ($sourceFiles as $f) {
-                $output->writeln("\t<info>{$f}</info>");
+        foreach ($modes as $mode) {
+            $resolver = $mode->getAssetResolver();
+            $chunks = $resolver->resolve($sourceFiles, $webroot);
+
+            foreach ($chunks as $chunk) {
+                $output->writeln("Chunk {$chunk->getName()}:");
+
+                foreach ($chunk->assets as $f) {
+                    $output->writeln("\t<info>{$f}</info>");
+                }
             }
         }
     }
