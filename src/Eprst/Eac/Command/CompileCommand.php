@@ -3,12 +3,9 @@
 namespace Eprst\Eac\Command;
 
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
-use Eprst\Eac\Service\AssetCompiler;
-use Eprst\Eac\Service\Extractor\SgmlCommentChunk;
-use Eprst\Eac\Service\Extractor\XPathTagExtractor;
+use Eprst\Eac\Service\Factory\JsMode;
+use Eprst\Eac\Service\Factory\ModeFactoryInterface;
 use Eprst\Eac\Service\Path;
-use Eprst\Eac\Service\ScriptTagGenerator;
-use Eprst\Eac\Service\SgmlTagAssetResolver;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -26,6 +23,8 @@ class CompileCommand extends Command
     const OPTION_YUIC = 'yuicompressor';
 
     const OPTION_WRITE_REPLACE = 'replace';
+
+    const OPTION_MODES = 'mode';
 
     /**
      * @var CommonArgsHelper
@@ -60,7 +59,11 @@ class CompileCommand extends Command
              ->addOption(self::OPTION_WRITE_REPLACE,
                          null,
                          InputOption::VALUE_NONE,
-                         'Put modified content to source file instead of .eac file');
+                         'Put modified content to source file instead of .eac file')
+             ->addOption(self::OPTION_MODES,
+                         substr(self::OPTION_MODES, 0, 1),
+                         InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
+                         '');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -78,50 +81,83 @@ class CompileCommand extends Command
         if (!Path::isAbsolute($compileDir)) {
             $compileDir = Path::prepend($compileDir, getcwd());
         }
-        $yuicPath    = $input->getOption(self::OPTION_YUIC);
+        $yuicPath = $input->getOption(self::OPTION_YUIC);
+        $javaPath = 'java';
 
         $prefix = $input->getOption(self::OPTION_PREFIX);
         if ($prefix == self::OPTION_PREFIX_DEFAULT) {
             $prefix = true;
         }
 
+        $isReplace = $input->getOption(self::OPTION_WRITE_REPLACE);
+
         $output->writeln("Processing sources:\n\t<info>". implode("</info>\n\t<info>", $sourceFiles) . "</info>");
         $output->writeln("Compile directory: <info>{$compileDir}</info>");
         $output->writeln("Web root: <info>{$webroot}</info>");
 
-        $chunkManager = new SgmlCommentChunk();
+        /** @var ModeFactoryInterface[] $modes */
+        $modes = array();
+        foreach ($input->getOption(self::OPTION_MODES) as $mode) {
+            switch ($mode) {
+                case 'js':
+                    $modes[] = new JsMode($yuicPath, $javaPath, $compileDir, $webroot);
+                    break;
+                default:
+                    throw new \RuntimeException("Unsupported mode {$mode}");
+            }
+        }
 
-        $resolver = new SgmlTagAssetResolver($chunkManager, new XPathTagExtractor('//script'), 'src');
-        $assetsData = $resolver->resolveAssets($sourceFiles, $webroot);
+        if (empty($modes)) {
+            throw new \RuntimeException("You must specify at least one mode.");
+        }
 
-        $assetCompiler = new AssetCompiler($compileDir, $webroot, $yuicPath, 'java');
+        foreach ($modes as $mode) {
+            $this->runMode($mode, $output, $isReplace, $sourceFiles, $webroot, $prefix, $compileDir);
+        }
+    }
 
-        $assetTag = new ScriptTagGenerator();
+    /**
+     * @param ModeFactoryInterface $mode
+     * @param OutputInterface      $output
+     * @param bool                 $isReplace
+     * @param array                $sourceFiles
+     * @param string               $webroot
+     * @param string               $prefix
+     * @param string               $compileDir
+     */
+    private function runMode(ModeFactoryInterface $mode, OutputInterface $output, $isReplace, $sourceFiles, $webroot, $prefix, $compileDir)
+    {
+        $chunkManager = $mode->getChunkManager();
+        $resolver     = $mode->getAssetResolver();
+        $compiler     = $mode->getCompiler();
+        $generator    = $mode->getTagGenerator();
 
         $tempFileMap = array();
 
-        foreach ($assetsData as $sourceIdentifier => $assetFiles) {
-            $output->write("Chunk <info>{$sourceIdentifier}</info>:");
+        $chunks = $resolver->resolve($sourceFiles, $webroot);
 
-            if (empty($assetFiles)) {
-                $output->writeln(" contains no assets.");
+        foreach ($chunks as $chunk) {
+            $output->write("Chunk <info>{$chunk->getName()}</info>: ");
+
+            if (empty($chunk->assets)) {
+                $output->writeln("contains no assets.");
                 continue;
             }
 
-            $compileFile = $assetCompiler->compile($assetFiles, array('js_compressor'), 'js');
+            $compileFile = $compiler->compile($chunk->assets);
 
             if (file_exists($compileFile)) {
-                $output->write(" <info>{$compileFile}</info>");
+                $output->write("<info>{$compileFile}</info>");
             } else {
                 throw new \RuntimeException("Failed to write <info>{$compileFile}</info>.");
             }
 
-            list($sourceFile, $chunkId) = explode('#', $sourceIdentifier);
-
             $resourcePrefix = $this->getResourcePrefix($prefix, $compileDir, $webroot);
 
             if ($resourcePrefix === false) {
-                throw new \RuntimeException("Compile dir is not under web root, though you must specify --prefix option.");
+                throw new \RuntimeException("Compile dir is not under web root, though you must specify "
+                                            . "--" . self::OPTION_PREFIX
+                                            . " option.");
             }
 
             $compiledSrc = Path::prepend(basename($compileFile), $resourcePrefix);
@@ -129,20 +165,20 @@ class CompileCommand extends Command
 
             $output->writeln(" -> <info>{$compiledSrc}</info>");
 
-            $tag = $assetTag->generate($compiledSrc);
-
-            if (!isset($tempFileMap[$sourceFile])) {
-                $tempFileMap[$sourceFile] = Path::append(sys_get_temp_dir(), 'EAC' . sha1($sourceFile));
-                copy($sourceFile, $tempFileMap[$sourceFile]);
+            if (!isset($tempFileMap[$chunk->sourceFile])) {
+                $tempFileMap[$chunk->sourceFile] = Path::append(sys_get_temp_dir(), 'EAC' . sha1($chunk->sourceFile));
+                copy($chunk->sourceFile, $tempFileMap[$chunk->sourceFile]);
             }
 
-            $source = $chunkManager->replaceChunk(file_get_contents($tempFileMap[$sourceFile]), $chunkId, $tag);
-            file_put_contents($tempFileMap[$sourceFile], $source);
+            $replacement = $generator->generate($compiledSrc);
+            $source      = $chunkManager->replaceChunk(file_get_contents($tempFileMap[$chunk->sourceFile]),
+                                                       $chunk->id,
+                                                       $replacement);
+            file_put_contents($tempFileMap[$chunk->sourceFile], $source);
         }
 
         $output->writeln('');
-        $isReplace = $input->getOption(self::OPTION_WRITE_REPLACE);
-        $output->writeln('Writing ' . count($tempFileMap) . ' file(s)' . ($isReplace ? ' with replace flag' : '' ));
+        $output->writeln('Writing ' . count($tempFileMap) . ' file(s)' . ($isReplace ? ' with replace flag' : ''));
         foreach ($tempFileMap as $target => $source) {
             $target = $target . ($isReplace ? '' : '.eac');
             if (!copy($source, $target)) {

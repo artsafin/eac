@@ -41,11 +41,11 @@ class SgmlTagAssetResolver implements AssetResolverInterface
      * @param array $files
      * @param string $root
      *
-     * @return array
+     * @return ChunkData[]
      */
-    public function resolveAssets($files, $root)
+    public function resolve($files, $root)
     {
-        $compileFiles = array();
+        $allChunks = array();
 
         foreach ($files as $file) {
 
@@ -57,9 +57,7 @@ class SgmlTagAssetResolver implements AssetResolverInterface
 
                 list($chunkText, $chunkAttrs) = $chunkData;
 
-                $sourceId = sprintf("%s#%s", $file, $chunkId);
-
-                $compileFiles[$sourceId] = array();
+                $chunkData = new ChunkData($file, $chunkId, $chunkAttrs);
 
                 $tags = $this->reader->read($chunkText);
 
@@ -69,18 +67,19 @@ class SgmlTagAssetResolver implements AssetResolverInterface
                     }
                     $resourceRef = $t[$this->tagAttribute];
                     if (Path::isRemote($resourceRef)) {
-                        $compileFiles[$sourceId][] = $resourceRef;
+                        $chunkData->addUniqueAsset($resourceRef);
                     } else {
                         $localFile = Path::prepend($resourceRef, $root);
                         if (file_exists($localFile)) {
-                            $compileFiles[$sourceId][] = $localFile;
+                            $chunkData->addUniqueAsset($localFile);
                         }
                     }
                 }
-                $compileFiles[$sourceId] = array_unique($compileFiles[$sourceId]);
+
+                $allChunks[] = $chunkData;
             }
         }
 
-        return $compileFiles;
+        return $allChunks;
     }
 } 

@@ -7,9 +7,9 @@ namespace Eprst\Eac\Service\TagWriter;
 interface TagGeneratorInterface
 {
     /**
-     * @param array $attributes
+     * @param string $compiled
      *
      * @return string
      */
-    public function generate($attributes);
+    public function generate($compiled);
 } 

@@ -12,7 +12,7 @@ interface AssetResolverInterface
      * @param array  $files
      * @param string $root
      *
-     * @return array
+     * @return ChunkData[]
      */
-    public function resolveAssets($files, $root);
+    public function resolve($files, $root);
 } 

@@ -5,12 +5,12 @@ namespace Eprst\Eac\Service\TagWriter;
 class ScriptTagGenerator implements TagGeneratorInterface
 {
     /**
-     * @param array $attributes
+     * @param string $compiled
      *
      * @return string
      */
-    public function generate($attributes)
+    public function generate($compiled)
     {
-        return sprintf("<script type='text/javascript' src='%s'></script>", $attributes['src']);
+        return sprintf("<script type='text/javascript' src='%s'></script>", $compiled);
     }
 }
