@@ -3,8 +3,8 @@
 namespace Eprst\Eac\Command;
 
 use Eprst\Eac\Command\Helper\CommonArgsHelper;
-use Eprst\Eac\Service\Factory\JsMode;
-use Eprst\Eac\Service\Factory\ModeFactoryInterface;
+use Eprst\Eac\Factory\JsMode;
+use Eprst\Eac\Factory\ModeFactoryInterface;
 use Eprst\Eac\Service\Path;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

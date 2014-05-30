@@ -1,6 +1,6 @@
 <?php
 
-namespace Eprst\Eac\Service\Factory;
+namespace Eprst\Eac\Factory;
 
 use Eprst\Eac\Service\AssetResolver\AssetResolverInterface;
 use Eprst\Eac\Service\AssetResolver\SgmlTagAssetResolver;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Eprst\Eac\Service\Factory;
+namespace Eprst\Eac\Factory;
 
 use Eprst\Eac\Service\AssetResolver\AssetResolverInterface;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
+use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
-use Eprst\Eac\Service\TagWriter\TagGeneratorInterface;
 
 interface ModeFactoryInterface
 {
