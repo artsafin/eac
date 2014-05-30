@@ -9,7 +9,7 @@
             "Eprst\\Eac\\": "src/Eprst/Eac"
         }
     },
-    "bin": ["bin/eac.php"],
+    "bin": ["bin/eac"],
     "authors": [
         {
             "name": "Artur Safin",
