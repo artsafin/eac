@@ -25,6 +25,8 @@ class CompileCommand extends Command
 
     const OPTION_YUIC = 'yuicompressor';
 
+    const OPTION_WRITE_REPLACE = 'replace';
+
     /**
      * @var CommonArgsHelper
      */
@@ -48,13 +50,17 @@ class CompileCommand extends Command
              ->addOption(self::OPTION_PREFIX,
                          null,
                          InputOption::VALUE_REQUIRED,
-                         'Prefix for compiled filenames',
+                         'Web server prefix to put in src="" attribute for compiled assets',
                          self::OPTION_PREFIX_DEFAULT)
              ->addOption(self::OPTION_YUIC,
                          null,
                          InputOption::VALUE_REQUIRED,
                          'YUI Compressor jar',
-                         'yuicompressor.jar');
+                         'yuicompressor.jar')
+             ->addOption(self::OPTION_WRITE_REPLACE,
+                         null,
+                         InputOption::VALUE_NONE,
+                         'Put modified content to source file instead of .eac file');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -95,15 +101,17 @@ class CompileCommand extends Command
         $tempFileMap = array();
 
         foreach ($assetsData as $sourceIdentifier => $assetFiles) {
+            $output->write("Chunk <info>{$sourceIdentifier}</info>:");
 
             if (empty($assetFiles)) {
+                $output->writeln(" contains no files.");
                 continue;
             }
 
             $compileFile = $assetCompiler->compile($assetFiles, array('js_compressor'), 'js');
 
             if (file_exists($compileFile)) {
-                $output->write("Chunk <info>{$sourceIdentifier}</info>: <info>{$compileFile}</info>");
+                $output->write(" <info>{$compileFile}</info>");
             } else {
                 throw new \RuntimeException("Failed to write <info>{$compileFile}</info>.");
             }
@@ -133,8 +141,10 @@ class CompileCommand extends Command
         }
 
         $output->writeln('');
-        $output->writeln('Writing ' . count($tempFileMap) . ' files');
+        $isReplace = $input->getOption(self::OPTION_WRITE_REPLACE);
+        $output->writeln('Writing ' . count($tempFileMap) . ' file(s)' . ($isReplace ? ' with replace flag' : '' ));
         foreach ($tempFileMap as $target => $source) {
+            $target = $target . ($isReplace ? '' : '.eac');
             if (!copy($source, $target)) {
                 throw new \RuntimeException("Copy failed {$source} -> {$target}");
             }
