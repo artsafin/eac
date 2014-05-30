@@ -3,8 +3,6 @@
 
 namespace Eprst\Eac\Service;
 
-use Assetic\Asset\AssetCollection;
-use Assetic\Asset\FileAsset;
 use Assetic\AssetManager;
 use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
@@ -20,7 +18,7 @@ class AssetCompiler
     private $af;
     private $compileDir;
 
-    public function __construct($compileDir, $yuicPath, $javaPath)
+    public function __construct($compileDir, $webroot, $yuicPath, $javaPath)
     {
         $fm = new FilterManager();
         $fm->set('js_compressor',
@@ -34,7 +32,7 @@ class AssetCompiler
 
         $am = new AssetManager();
 
-        $this->af = new AssetFactory('');
+        $this->af = new AssetFactory($webroot);
         $this->af->setAssetManager($am);
         $this->af->setFilterManager($fm);
 
