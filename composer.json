@@ -1,7 +1,6 @@
 {
     "name": "eprst/eac",
     "require": {
-        "monolog/monolog": "~1",
         "kriswallsmith/assetic": "~1",
         "symfony/console": "~2.4"
     },
