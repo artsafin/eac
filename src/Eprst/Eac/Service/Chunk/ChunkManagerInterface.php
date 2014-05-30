@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Eprst\Eac\Service\Extractor;
+namespace Eprst\Eac\Service\Chunk;
 
 
 interface ChunkManagerInterface

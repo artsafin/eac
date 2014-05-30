@@ -1,24 +1,24 @@
 <?php
 
 
-namespace Eprst\Eac\Service;
+namespace Eprst\Eac\Service\Compiler;
 
-use Assetic\AssetManager;
 use Assetic\AssetWriter;
 use Assetic\Factory\AssetFactory;
 use Assetic\Filter\Yui;
 use Assetic\Filter\FilterCollection;
 use Assetic\FilterManager;
 
-class AssetCompiler
+class AssetCompilerImpl implements AssetCompiler
 {
     /**
      * @var AssetFactory
      */
     private $af;
     private $compileDir;
+    private $filters;
 
-    public function __construct($compileDir, $webroot, $yuicPath, $javaPath)
+    public function __construct($filters, $compileDir, $webroot, $yuicPath, $javaPath)
     {
         $fm = new FilterManager();
         $fm->set('js_compressor',
@@ -30,21 +30,18 @@ class AssetCompiler
                                           new Yui\CssCompressorFilter($yuicPath, $javaPath)
                                       )));
 
-        $am = new AssetManager();
-
         $this->af = new AssetFactory($webroot);
-        $this->af->setAssetManager($am);
-        $this->af->setFilterManager($fm);
 
         $this->compileDir = $compileDir;
+        $this->filters = $filters;
     }
 
-    public function compile($assetFiles, $compressors)
+    public function compile($assetFiles)
     {
-        $compileFile = $this->af->generateAssetName($assetFiles, $compressors);
+        $compileFile = $this->af->generateAssetName($assetFiles, $this->filters);
 
         $asset = $this->af->createAsset($assetFiles,
-                                        $compressors,
+                                        $this->filters,
                                         array(
                                             'name'   => $compileFile,
                                             'output' => '*'

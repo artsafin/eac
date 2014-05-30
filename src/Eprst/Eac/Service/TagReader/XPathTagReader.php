@@ -1,13 +1,13 @@
 <?php
 
-namespace Eprst\Eac\Service\Extractor;
+namespace Eprst\Eac\Service\TagReader;
 
 use DOMDocument;
 use DOMNode;
 use DOMNodeList;
 use DOMXPath;
 
-class XPathTagExtractor implements TagExtractorInterface
+class XPathTagReader implements TagReaderInterface
 {
     /**
      * @var string
@@ -22,7 +22,7 @@ class XPathTagExtractor implements TagExtractorInterface
     /**
      * {@inheritDoc}
      */
-    public function extract($text)
+    public function read($text)
     {
         $doc = new DOMDocument();
         libxml_use_internal_errors(true);

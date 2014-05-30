@@ -1,11 +1,12 @@
 <?php
 
-namespace Eprst\Eac\Service;
+namespace Eprst\Eac\Service\AssetResolver;
 
-use Eprst\Eac\Service\Extractor\ChunkManagerInterface;
+use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Extractor\TagExtractorInterface;
+use Eprst\Eac\Service\Path;
 
-class SgmlTagAssetResolver
+class SgmlTagAssetResolver implements AssetResolverInterface
 {
     /**
      * @var TagExtractorInterface
