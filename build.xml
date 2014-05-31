@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Phar build" default="phar">
+
+	<!-- ============================================  -->
+	<!-- Target: phar                                  -->
+	<!-- ============================================  -->
+	<target name="phar">
+		<echo msg="Building build/eac.phar"/>
+		<pharpackage
+				alias="eac.phar"
+				stub="./phar_stub.php"
+				destfile="./build/eac.phar"
+				basedir="./">
+			<fileset dir=".">
+				<include name="bin/**"/>
+				<include name="src/**"/>
+				<include name="vendor/**"/>
+				<include name="composer.json"/>
+				<include name="composer.lock"/>
+			</fileset>
+			<metadata>
+				<element name="version" value="1.0"/>
+				<element name="authors">
+					<element name="Artur Safin">
+						<element name="e-mail" value="treilor@gmail.com"/>
+					</element>
+				</element>
+			</metadata>
+		</pharpackage>
+	</target>
+</project>
