@@ -1,0 +1,33 @@
+Text before chunks not included in any chunk
+
+<!-- eac:compile -->
+    Chunk 1
+    <script type="text/javascript" src="/js/calculate.js"></script>
+    End of chunk 1
+<!-- /eac:compile -->
+
+Not included in any chunk
+
+<!-- eac:compile -->
+Chunk 2
+<script type="text/javascript" src="/js/calculate.js"></script>
+End of chunk 2
+<!-- /eac:compile -->
+
+<!-- eac:compile -->Chunk 3 in one line<!-- /eac:compile --><!-- eac:compile -->Chunk 4 after chunk 3<!-- /eac:compile -->
+
+<!-- eac:compile --><!-- /eac:compile -->
+
+<!-- eac:compile bool_attr,attribute=value, number=1 --><!-- /eac:compile -->
+
+<!-- eac:compile one_attribute_set     --><!-- /eac:compile -->
+
+<!-- eac:compile
+    indented_and_multiline=true,
+    attributes=yes,
+    are=possible
+forsure,butdelimiter=alwayscomma-->
+Chunk 8
+<!-- /eac:compile -->
+
+Text after chunks not included in any chunk

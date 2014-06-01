@@ -1,0 +1,23 @@
+Text before chunks not included in any chunk
+
+<!-- eac:compile -->chunk 1 replaced<!-- /eac:compile -->
+
+Not included in any chunk
+
+<!-- eac:compile -->chunk 2 replaced<!-- /eac:compile -->
+
+<!-- eac:compile -->chunk 3 replaced<!-- /eac:compile --><!-- eac:compile -->chunk 4 replaced<!-- /eac:compile -->
+
+<!-- eac:compile -->chunk 5 replaced<!-- /eac:compile -->
+
+<!-- eac:compile bool_attr,attribute=value, number=1 -->chunk 6 replaced<!-- /eac:compile -->
+
+<!-- eac:compile one_attribute_set     -->chunk 7 replaced<!-- /eac:compile -->
+
+<!-- eac:compile
+    indented_and_multiline=true,
+    attributes=yes,
+    are=possible
+forsure,butdelimiter=alwayscomma-->chunk 8 replaced<!-- /eac:compile -->
+
+Text after chunks not included in any chunk
