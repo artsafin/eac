@@ -1,8 +1,8 @@
 <?php
 
-
 namespace Eprst\Eac\Service\Chunk;
 
+use Eprst\Eac\Service\AssetResolver\ChunkData;
 
 interface ChunkManagerInterface
 {

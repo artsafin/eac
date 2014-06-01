@@ -6,7 +6,7 @@ use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Path;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
 
-class SgmlTagAssetResolver implements AssetResolverInterface
+class HtmlTagAssetResolver implements AssetResolverInterface
 {
     /**
      * @var TagReaderInterface

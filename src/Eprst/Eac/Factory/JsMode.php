@@ -3,9 +3,9 @@
 namespace Eprst\Eac\Factory;
 
 use Eprst\Eac\Service\AssetResolver\AssetResolverInterface;
-use Eprst\Eac\Service\AssetResolver\SgmlTagAssetResolver;
+use Eprst\Eac\Service\AssetResolver\HtmlTagAssetResolver;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
-use Eprst\Eac\Service\Chunk\SgmlCommentChunk;
+use Eprst\Eac\Service\Chunk\HtmlCommentChunk;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
 use Eprst\Eac\Service\Compiler\AssetCompilerImpl;
 use Eprst\Eac\Service\TagGenerator\ScriptTagGenerator;
@@ -49,7 +49,7 @@ class JsMode implements ModeFactoryInterface
      */
     public function getChunkManager()
     {
-        return new SgmlCommentChunk($this->chunkIdent);
+        return new HtmlCommentChunk($this->chunkIdent);
     }
 
     /**
@@ -65,7 +65,7 @@ class JsMode implements ModeFactoryInterface
      */
     public function getAssetResolver()
     {
-        return new SgmlTagAssetResolver($this->getChunkManager(), $this->getTagReader(), $this->scriptSrcAttr);
+        return new HtmlTagAssetResolver($this->getChunkManager(), $this->getTagReader(), $this->scriptSrcAttr);
     }
 
     /**

@@ -3,7 +3,7 @@
 
 namespace Eprst\Eac\Service\Chunk;
 
-class SgmlCommentChunk implements ChunkManagerInterface
+class HtmlCommentChunk implements ChunkManagerInterface
 {
     private $commentIdentifier;
 
@@ -17,6 +17,9 @@ class SgmlCommentChunk implements ChunkManagerInterface
         return sprintf('/<!--\s*?%s(.*?(?=-->))-->(.*?)<!--\s*?\/%s\s*?-->/ms', $this->commentIdentifier, $this->commentIdentifier);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function extractChunks($fromText)
     {
         $re = $this->buildRegexp();
