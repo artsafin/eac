@@ -16,8 +16,6 @@
 				<include name="bin/**"/>
 				<include name="src/**"/>
 				<include name="vendor/**"/>
-				<include name="composer.json"/>
-				<include name="composer.lock"/>
 			</fileset>
 			<metadata>
 				<element name="version" value="1.0"/>
