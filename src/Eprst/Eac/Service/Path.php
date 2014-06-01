@@ -24,26 +24,34 @@ class Path
             return true;
         }
 
-        $isWin = defined('PHP_WINDOWS_VERSION_BUILD');
-        if ($isWin) {
+        $isAbsoluteWin = function($path, $root) {
             if ($root === null) {
-                $isPathStartsWithRoot = preg_match('/^[a-z]:[\/\\\\]/i', $path);
+                $isPathStartsWithRoot = preg_match('/^([a-z]:)?[\/\\\\]/i', $path);
             } else {
-                $root = strtolower(realpath($root));
+                $root     = strtolower(realpath($root));
                 $realpath = strtolower(realpath($path));
                 if (!$root || !$realpath) {
                     return true;
                 }
-                $isPathStartsWithRoot = strlen($realpath) >= strlen($root)
-                                        && substr($realpath, 0, strlen($root)) == $root;
+                $isPathStartsWithRoot = stripos($realpath, $root) === 0;
             }
-        } else {
-            $root = ($root === null) ? '/' : $root;
-            $isPathStartsWithRoot = strlen($path) >= strlen($root)
-                                    && substr($path, 0, strlen($root)) == $root;
-        }
 
-        return $isPathStartsWithRoot;
+            return $isPathStartsWithRoot;
+        };
+
+        $isAbsoluteNix = function($path, $root) {
+            $root                 = ($root === null) ? '/' : $root;
+            $isPathStartsWithRoot = stripos($path, $root) === 0;
+
+            return $isPathStartsWithRoot;
+        };
+
+        $isWin = defined('PHP_WINDOWS_VERSION_BUILD');
+        if ($isWin) {
+            return $isAbsoluteWin($path, $root) || $isAbsoluteNix($path, $root);
+        } else {
+            return $isAbsoluteNix($path, $root);
+        }
     }
 
     private static function combinePathParts($path1, $path2)
@@ -53,10 +61,6 @@ class Path
 
     private static function combineMultiplePaths($toPath, $paths, $append = true)
     {
-        if (self::isRemote($toPath)) {
-            return $toPath;
-        }
-
         $result = $toPath;
 
         $paths = $append ? $paths : array_reverse($paths);
@@ -70,6 +74,9 @@ class Path
 
     public static function prepend($basePath, $path1, $pathN = null)
     {
+        if (self::isRemote($basePath)) {
+            return $basePath;
+        }
         return static::combineMultiplePaths($basePath, array_slice(func_get_args(), 1), false);
     }
 
