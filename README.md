@@ -26,6 +26,14 @@ Also available from downloads section.
 
 `$ cd eac && composer install`
 
+#### Run tests ####
+
+`$ git clone git@bitbucket.org:artsafin/eac.git`
+
+`$ cd eac && composer install`
+
+`$ phpunit -c phpunit.xml.dist`
+
 ### Basic usage ###
 
 #### List available commands ####
