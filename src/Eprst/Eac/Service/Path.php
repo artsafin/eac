@@ -4,22 +4,6 @@ namespace Eprst\Eac\Service;
 
 class Path
 {
-    private $path;
-    /**
-     * @var array
-     */
-    private $root = null;
-
-    public function __construct($path)
-    {
-        $this->path = $path;
-    }
-
-    public function setRoot($root)
-    {
-        $this->root = $root;
-    }
-
     public static function isRemote($path)
     {
         if (mb_substr($path, 0, 2) == '//') {
