@@ -2,13 +2,13 @@
 
 namespace Eprst\Eac\Factory;
 
-use Assetic\Filter\JSMinFilter;
 use Eprst\Eac\Service\AssetResolver\AssetResolverInterface;
 use Eprst\Eac\Service\AssetResolver\HtmlTagAssetResolver;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Chunk\HtmlCommentChunk;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
 use Eprst\Eac\Service\Compiler\AssetCompilerImpl;
+use Eprst\Eac\Service\Compiler\Filter\JShrinkFilter;
 use Eprst\Eac\Service\TagGenerator\ScriptTagGenerator;
 use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
@@ -65,7 +65,7 @@ class JsMode implements ModeFactoryInterface
     public function getCompiler()
     {
         $filters = array(
-            new JSMinFilter()
+            new JShrinkFilter()
         );
 
         return new AssetCompilerImpl($filters, $this->compileDir, $this->webRoot);

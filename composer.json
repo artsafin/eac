@@ -3,7 +3,7 @@
     "require": {
         "kriswallsmith/assetic": "~1",
         "symfony/console": "~2.4",
-        "mrclay/minify": "~2"
+        "tedivm/jshrink": "~1.0"
     },
     "autoload": {
         "psr-4": {
