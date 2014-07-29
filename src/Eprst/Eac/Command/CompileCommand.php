@@ -20,8 +20,6 @@ class CompileCommand extends Command
     const OPTION_PREFIX = 'prefix';
     const OPTION_PREFIX_DEFAULT = 'smart choice';
 
-    const OPTION_YUIC = 'yuicompressor';
-
     const OPTION_WRITE_REPLACE = 'replace';
 
     /**
@@ -49,11 +47,6 @@ class CompileCommand extends Command
                          InputOption::VALUE_REQUIRED,
                          'Web server prefix to put in src="" attribute for compiled assets',
                          self::OPTION_PREFIX_DEFAULT)
-             ->addOption(self::OPTION_YUIC,
-                         null,
-                         InputOption::VALUE_REQUIRED,
-                         'YUI Compressor jar',
-                         'yuicompressor.jar')
              ->addOption(self::OPTION_WRITE_REPLACE,
                          null,
                          InputOption::VALUE_NONE,
@@ -76,8 +69,6 @@ class CompileCommand extends Command
         if (!Path::isAbsolute($compileDir)) {
             $compileDir = Path::prepend($compileDir, getcwd());
         }
-        $yuicPath = $input->getOption(self::OPTION_YUIC);
-        $javaPath = 'java';
 
         $prefix = $input->getOption(self::OPTION_PREFIX);
         if ($prefix == self::OPTION_PREFIX_DEFAULT) {
@@ -95,7 +86,7 @@ class CompileCommand extends Command
         foreach ($modeAliases as $mode) {
             switch ($mode) {
                 case 'js':
-                    $modes[] = new JsMode($yuicPath, $javaPath, $compileDir, $webroot);
+                    $modes[] = new JsMode($compileDir, $webroot);
                     break;
                 default:
                     throw new \RuntimeException("Unsupported mode {$mode}");

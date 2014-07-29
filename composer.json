@@ -2,7 +2,8 @@
     "name": "eprst/eac",
     "require": {
         "kriswallsmith/assetic": "~1",
-        "symfony/console": "~2.4"
+        "symfony/console": "~2.4",
+        "mrclay/minify": "~2"
     },
     "autoload": {
         "psr-4": {

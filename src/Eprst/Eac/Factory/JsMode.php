@@ -2,6 +2,7 @@
 
 namespace Eprst\Eac\Factory;
 
+use Assetic\Filter\JSMinFilter;
 use Eprst\Eac\Service\AssetResolver\AssetResolverInterface;
 use Eprst\Eac\Service\AssetResolver\HtmlTagAssetResolver;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
@@ -19,27 +20,17 @@ class JsMode implements ModeFactoryInterface
     /**
      * @var
      */
-    private $yuicPath;
-    /**
-     * @var
-     */
-    private $javaPath;
-    /**
-     * @var
-     */
     private $compileDir;
     /**
      * @var
      */
     private $webRoot;
 
-    function __construct($yuicPath, $javaPath, $compileDir, $webRoot)
+    function __construct($compileDir, $webRoot)
     {
         $this->chunkIdent    = 'eac:compile';
         $this->scriptXpath   = '//script';
         $this->scriptSrcAttr = 'src';
-        $this->yuicPath      = $yuicPath;
-        $this->javaPath      = $javaPath;
         $this->compileDir    = $compileDir;
         $this->webRoot       = $webRoot;
     }
@@ -74,7 +65,7 @@ class JsMode implements ModeFactoryInterface
     public function getCompiler()
     {
         $filters = array(
-            new Yui\JsCompressorFilter($this->yuicPath, $this->javaPath)
+            new JSMinFilter()
         );
 
         return new AssetCompilerImpl($filters, $this->compileDir, $this->webRoot);
