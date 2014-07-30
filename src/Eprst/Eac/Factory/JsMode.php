@@ -7,13 +7,12 @@ use Eprst\Eac\Service\AssetResolver\HtmlTagAssetResolver;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Chunk\HtmlCommentChunk;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
-use Eprst\Eac\Service\Compiler\AssetCompilerImpl;
+use Eprst\Eac\Service\Compiler\AsseticCompiler;
 use Eprst\Eac\Service\Compiler\Filter\JShrinkFilter;
 use Eprst\Eac\Service\TagGenerator\ScriptTagGenerator;
 use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
 use Eprst\Eac\Service\TagReader\XPathTagReader;
-use Assetic\Filter\Yui;
 
 class JsMode implements ModeFactoryInterface
 {
@@ -68,7 +67,7 @@ class JsMode implements ModeFactoryInterface
             new JShrinkFilter()
         );
 
-        return new AssetCompilerImpl($filters, $this->compileDir, $this->webRoot);
+        return new AsseticCompiler($filters, $this->compileDir, $this->webRoot);
     }
 
     /**

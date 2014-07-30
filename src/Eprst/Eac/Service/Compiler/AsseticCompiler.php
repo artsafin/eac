@@ -9,7 +9,7 @@ use Assetic\Filter\FilterCollection;
 use Assetic\FilterManager;
 use Eprst\Eac\Service\Path;
 
-class AssetCompilerImpl implements AssetCompiler
+class AsseticCompiler implements AssetCompiler
 {
     /**
      * @var AssetFactory
