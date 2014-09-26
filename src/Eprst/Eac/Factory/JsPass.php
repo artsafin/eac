@@ -7,31 +7,29 @@ use Eprst\Eac\Service\AssetResolver\HtmlTagAssetResolver;
 use Eprst\Eac\Service\Chunk\ChunkManagerInterface;
 use Eprst\Eac\Service\Chunk\HtmlCommentChunk;
 use Eprst\Eac\Service\Compiler\AssetCompiler;
-use Eprst\Eac\Service\Compiler\AsseticCompiler;
-use Eprst\Eac\Service\Compiler\Filter\JShrinkFilter;
 use Eprst\Eac\Service\TagGenerator\ScriptTagGenerator;
 use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
-use Eprst\Eac\Service\TagReader\TagReaderInterface;
 use Eprst\Eac\Service\TagReader\XPathTagReader;
 
-class JsMode implements ModeFactoryInterface
+class JsPass implements PassInterface
 {
-    /**
-     * @var
-     */
-    private $compileDir;
-    /**
-     * @var
-     */
-    private $webRoot;
 
-    function __construct($compileDir, $webRoot)
+    /**
+     * jsCompiler
+     *
+     * @var AssetCompiler
+     */
+    private $jsCompiler;
+
+    /**
+     * @param AssetCompiler $jsCompiler
+     */
+    function __construct(AssetCompiler $jsCompiler)
     {
         $this->chunkIdent    = 'eac:compile';
         $this->scriptXpath   = '//script';
         $this->scriptSrcAttr = 'src';
-        $this->compileDir    = $compileDir;
-        $this->webRoot       = $webRoot;
+        $this->jsCompiler = $jsCompiler;
     }
 
     /**
@@ -43,19 +41,13 @@ class JsMode implements ModeFactoryInterface
     }
 
     /**
-     * @return TagReaderInterface
-     */
-    public function getTagReader()
-    {
-        return new XPathTagReader($this->scriptXpath);
-    }
-
-    /**
      * @return AssetResolverInterface
      */
     public function getAssetResolver()
     {
-        return new HtmlTagAssetResolver($this->getChunkManager(), $this->getTagReader(), $this->scriptSrcAttr);
+        return new HtmlTagAssetResolver($this->getChunkManager(),
+                                        new XPathTagReader($this->scriptXpath),
+                                        $this->scriptSrcAttr);
     }
 
     /**
@@ -63,11 +55,7 @@ class JsMode implements ModeFactoryInterface
      */
     public function getCompiler()
     {
-        $filters = array(
-            new JShrinkFilter()
-        );
-
-        return new AsseticCompiler($filters, $this->compileDir, $this->webRoot);
+        return $this->jsCompiler;
     }
 
     /**

@@ -8,17 +8,12 @@ use Eprst\Eac\Service\Compiler\AssetCompiler;
 use Eprst\Eac\Service\TagGenerator\TagGeneratorInterface;
 use Eprst\Eac\Service\TagReader\TagReaderInterface;
 
-interface ModeFactoryInterface
+interface PassInterface
 {
     /**
      * @return ChunkManagerInterface
      */
     public function getChunkManager();
-
-    /**
-     * @return TagReaderInterface
-     */
-    public function getTagReader();
 
     /**
      * @return AssetResolverInterface

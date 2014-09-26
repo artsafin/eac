@@ -2,9 +2,11 @@
 
 namespace Eprst\Eac\Command;
 
-use Eprst\Eac\Command\Helper\CommonArgsHelper;
-use Eprst\Eac\Factory\JsMode;
-use Eprst\Eac\Factory\ModeFactoryInterface;
+use Eprst\Eac\Command\Helper\CommonArgs;
+use Eprst\Eac\Command\Helper\CompileCommandArgs;
+use Eprst\Eac\Factory\JsPass;
+use Eprst\Eac\Factory\PassFactory;
+use Eprst\Eac\Factory\PassInterface;
 use Eprst\Eac\Service\Path;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,109 +16,76 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CompileCommand extends Command
 {
-    const OPTION_COMPILE_DIR = 'out';
-    const OPTION_COMPILE_DIR_DEFAULT = '<webroot>/assets-min';
-
-    const OPTION_PREFIX = 'prefix';
-    const OPTION_PREFIX_DEFAULT = 'smart choice';
-
-    const OPTION_WRITE_REPLACE = 'replace';
 
     /**
-     * @var CommonArgsHelper
+     * @var CommonArgs
      */
-    private $argsHelper;
+    private $commonArgs;
+
+    /**
+     * compileArgs
+     *
+     * @var CompileCommandArgs
+     */
+    private $compileArgs;
 
     protected function configure()
     {
-        $this->argsHelper = new CommonArgsHelper();
-
         $this
             ->setName('eac:compile')
             ->setDescription('Compile assets of specified source files');
 
-        $this->argsHelper->addArguments($this);
+        $this->commonArgs  = new CommonArgs();
+        $this->compileArgs = new CompileCommandArgs();
 
-        $this->addOption(self::OPTION_COMPILE_DIR,
-                         null,
-                         InputOption::VALUE_REQUIRED,
-                         'Directory to put compiled files in',
-                         self::OPTION_COMPILE_DIR_DEFAULT)
-             ->addOption(self::OPTION_PREFIX,
-                         null,
-                         InputOption::VALUE_REQUIRED,
-                         'Web server prefix to put in src="" attribute for compiled assets',
-                         self::OPTION_PREFIX_DEFAULT)
-             ->addOption(self::OPTION_WRITE_REPLACE,
-                         null,
-                         InputOption::VALUE_NONE,
-                         'Put modified content to source file instead of .eac file');
+        $this->commonArgs->addArguments($this);
+        $this->compileArgs->addArguments($this);
+
+        foreach (PassFactory::getPassArguments() as $arg) {
+            $arg->addArguments($this);
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $sourceFiles = $this->argsHelper->getSources($input);
-        $webroot     = $this->argsHelper->getWebroot($input);
-        $modeAliases = $this->argsHelper->getModes($input);
+        $cwd         = getcwd();
+        $sourceFiles = $this->commonArgs->getSources($input);
+        $webroot     = $this->commonArgs->getWebroot($input);
+        $modeAliases = $this->commonArgs->getModes($input);
 
-        $compileDir  = $input->getOption(self::OPTION_COMPILE_DIR);
-        if ($compileDir == self::OPTION_COMPILE_DIR_DEFAULT) {
-            $compileDir = str_replace('<webroot>', $webroot, $compileDir);
-            if (!is_dir($compileDir)) {
-                mkdir($compileDir, 0750, true);
-            }
-        }
-        if (!Path::isAbsolute($compileDir)) {
-            $compileDir = Path::prepend($compileDir, getcwd());
-        }
-
-        $prefix = $input->getOption(self::OPTION_PREFIX);
-        if ($prefix == self::OPTION_PREFIX_DEFAULT) {
-            $prefix = true;
-        }
-
-        $isReplace = $input->getOption(self::OPTION_WRITE_REPLACE);
+        $compileDir = $this->compileArgs->getCompileDir($input, $webroot, $cwd);
+        $prefix     = $this->compileArgs->getPrefix($input, $compileDir, $webroot);
+        $isReplace  = $this->compileArgs->isReplace($input);
 
         $output->writeln("Processing sources:\n\t<info>". implode("</info>\n\t<info>", $sourceFiles) . "</info>");
         $output->writeln("Compile directory: <info>{$compileDir}</info>");
         $output->writeln("Web root: <info>{$webroot}</info>");
 
-        /** @var ModeFactoryInterface[] $modes */
-        $modes = array();
-        foreach ($modeAliases as $mode) {
-            switch ($mode) {
-                case 'js':
-                    $modes[] = new JsMode($compileDir, $webroot);
-                    break;
-                default:
-                    throw new \RuntimeException("Unsupported mode {$mode}");
-            }
-        }
+        $passes = PassFactory::createByAlias($modeAliases, compact(array('cwd', 'webroot', 'compileDir')));
 
-        if (empty($modes)) {
+        if (empty($passes)) {
             throw new \RuntimeException("You must specify at least one mode.");
         }
 
-        foreach ($modes as $mode) {
-            $this->runMode($mode, $output, $isReplace, $sourceFiles, $webroot, $prefix, $compileDir);
+        foreach ($passes as $mode) {
+            $this->runPass($mode, $output, $isReplace, $sourceFiles, $webroot, $prefix);
         }
     }
 
     /**
-     * @param ModeFactoryInterface $mode
+     * @param PassInterface $pass
      * @param OutputInterface      $output
      * @param bool                 $isReplace
      * @param array                $sourceFiles
      * @param string               $webroot
      * @param string               $prefix
-     * @param string               $compileDir
      */
-    private function runMode(ModeFactoryInterface $mode, OutputInterface $output, $isReplace, $sourceFiles, $webroot, $prefix, $compileDir)
+    private function runPass(PassInterface $pass, OutputInterface $output, $isReplace, $sourceFiles, $webroot, $prefix)
     {
-        $chunkManager = $mode->getChunkManager();
-        $resolver     = $mode->getAssetResolver();
-        $compiler     = $mode->getCompiler();
-        $generator    = $mode->getTagGenerator();
+        $chunkManager = $pass->getChunkManager();
+        $resolver     = $pass->getAssetResolver();
+        $compiler     = $pass->getCompiler();
+        $generator    = $pass->getTagGenerator();
 
         $tempFileMap = array();
 
@@ -138,15 +107,7 @@ class CompileCommand extends Command
                 throw new \RuntimeException("Failed to write <info>{$compileFile}</info>.");
             }
 
-            $resourcePrefix = $this->getResourcePrefix($prefix, $compileDir, $webroot);
-
-            if ($resourcePrefix === false) {
-                throw new \RuntimeException("Compile dir is not under web root, though you must specify "
-                                            . "--" . self::OPTION_PREFIX
-                                            . " option.");
-            }
-
-            $compiledSrc = Path::prepend(basename($compileFile), $resourcePrefix);
+            $compiledSrc = Path::prepend(basename($compileFile), $prefix);
             $compiledSrc = str_replace(DIRECTORY_SEPARATOR, '/', $compiledSrc);
 
             $output->writeln(" -> <info>{$compiledSrc}</info>");
@@ -172,21 +133,5 @@ class CompileCommand extends Command
             }
             unlink($source);
         }
-    }
-
-    private function getResourcePrefix($desiredPrefix, $compileDir, $webroot)
-    {
-        if ($desiredPrefix === true) {
-            $compileDir = realpath($compileDir);
-            $webroot = realpath($webroot);
-
-            if (strpos($webroot, $compileDir) === 0) {
-                $desiredPrefix = str_replace($webroot, '', $compileDir);
-            } else {
-                return false;
-            }
-        }
-
-        return $desiredPrefix;
     }
 }

@@ -2,9 +2,10 @@
 
 namespace Eprst\Eac\Command;
 
-use Eprst\Eac\Command\Helper\CommonArgsHelper;
-use Eprst\Eac\Factory\JsMode;
-use Eprst\Eac\Factory\ModeFactoryInterface;
+use Eprst\Eac\Command\Helper\CommonArgs;
+use Eprst\Eac\Factory\JsPass;
+use Eprst\Eac\Factory\PassFactory;
+use Eprst\Eac\Factory\PassInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,41 +13,31 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ShowSourcesCommand extends Command
 {
     /**
-     * @var CommonArgsHelper
+     * @var CommonArgs
      */
-    private $argsHelper;
+    private $commonArgs;
 
     protected function configure()
     {
-        $this->argsHelper = new CommonArgsHelper();
+        $this->commonArgs = new CommonArgs();
 
         $this
             ->setName('eac:sources')
             ->setDescription('Show sources that will be covered by compiler')
            ;
 
-        $this->argsHelper->addArguments($this);
+        $this->commonArgs->addArguments($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $sourceFiles = $this->argsHelper->getSources($input);
-        $webroot = $this->argsHelper->getWebroot($input);
-        $modeAliases = $this->argsHelper->getModes($input);
+        $sourceFiles = $this->commonArgs->getSources($input);
+        $webroot     = $this->commonArgs->getWebroot($input);
+        $modeAliases = $this->commonArgs->getModes($input);
 
         $output->writeln("Processing sources:\n\t<info>". implode("</info>\n\t<info>", $sourceFiles) . "</info>");
 
-        /** @var ModeFactoryInterface[] $modes */
-        $modes = array();
-        foreach ($modeAliases as $mode) {
-            switch ($mode) {
-                case 'js':
-                    $modes[] = new JsMode('', '', '', $webroot);
-                    break;
-                default:
-                    throw new \RuntimeException("Unsupported mode {$mode}");
-            }
-        }
+        $modes = PassFactory::createByAlias($modeAliases, array('webroot' => $webroot));
 
         if (empty($modes)) {
             throw new \RuntimeException("You must specify at least one mode.");

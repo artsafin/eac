@@ -53,11 +53,12 @@ class ExternalCommandCompiler implements AssetCompiler
     {
         $arguments = array_reduce($files, $this->filesReducer);
 
-        $proc = new Process($this->command, null, null, null, $this->timeout);
-        $proc->mustRun();
-        if ($proc->isSuccessful()) {
+        $cmdLine = strtr($this->command, array(
+            '%f' => $arguments
+        ));
 
-        }
+        $proc = new Process($cmdLine, null, null, null, $this->timeout);
+        $proc->mustRun();
     }
 }
  

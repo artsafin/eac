@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 
-class CommonArgsHelper implements HelperInterface
+class CommonArgs implements HelperInterface, CommandArguments
 {
     const ARG_SOURCE = 'source';
 
